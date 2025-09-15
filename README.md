@@ -1,7 +1,9 @@
 # Programming Languages Statistics
 
-Ushbu loyiha GitHub repository’laridan olingan ma’lumotlarni saqlash, tahlil qilish va API orqali taqdim etish uchun mo‘ljallangan.
-
+Berilgan JSON fayldagi GitHub repository metadata obyektlarini Django bazasiga import
+qilishva REST API orqali statistik hisobot (report) chiqarish.
+Yaratilgan repozitariyalardan eng ko'p dasturlash tili qo'llanilganlarini (top 5) yillar kesimida
+chiqarish
 ---
 
 ## 📦 O‘rnatish
@@ -14,7 +16,14 @@ source venv/bin/activate   # Linux/Mac
 venv\Scripts\activate      # Windows
 pip install -r requirements.txt
 ```
+---
 
+## 🖥️ Migratsiya qilish
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
 ---
 
 ## ⚙️ Ma’lumotlarni import qilish
@@ -22,24 +31,17 @@ pip install -r requirements.txt
 Loyiha `reportapp` ichida maxsus Django management command bilan keladi. JSON fayldan ma’lumotlarni import qilish uchun:
 
 ```bash
-python manage.py import_data path/to/file.json
+python manage.py importcode path/to/part1_1.json
 ```
 
-### Misol:
 
-```bash
-python manage.py import_data data/github_repos.json
-```
 
 ✅ Ushbu buyruq:
 - `GithubReport` jadvalini to‘ldiradi  
-- Har bir repositoriyaning `languages` massivini **`GithubLanguage`** jadvaliga yozadi  
+- Har bir repositoriyaning `languages` massivini **`GithubLanguage`** jadvaliga yozadi
+- Shu orqali biz normalashda performanceni yaxshilashimiz mumkin
 
-Import tugagandan so‘ng terminalda quyidagiga o‘xshash xabar chiqadi:
 
-```
-Barcha  1250 qatorlar import qilindi
-```
 
 ---
 
@@ -71,15 +73,17 @@ GET /api/report-orm/
 ```json
 [
   {
-    "year": 2020,
-    "lang_name": "Python",
-    "total_size": 1234567
-  },
-  {
-    "year": 2020,
-    "lang_name": "JavaScript",
-    "total_size": 987654
-  }
+		"year": 2025,
+		"name": "C",
+		"total_size": 2150560,
+		"rownum": 4
+	},
+	{
+		"year": 2025,
+		"name": "TypeScript",
+		"total_size": 1532749,
+		"rownum": 5
+	}
 ]
 ```
 
@@ -90,46 +94,16 @@ Bu API har bir yil bo‘yicha **eng ko‘p ishlatilgan TOP-5 dasturlash tillarin
 ## 🖥️ Serverni ishga tushirish
 
 ```bash
-python manage.py migrate
 python manage.py runserver
 ```
 
 Brauzer orqali oching:  
 👉 `http://127.0.0.1:8000/`
 
----
 
-## 🔧 Foydali buyruqlar
 
-Testlarni ishga tushirish:
-```bash
-python manage.py test
-```
 
-Superuser yaratish:
-```bash
-python manage.py createsuperuser
-```
 
----
-
-## 📑 .gitignore haqida
-
-Loyihada `.gitignore` faylida quyidagilar yozilgan:
-
-```
-venv/
-__pycache__/
-*.pyc
-*.sqlite3
-.env
-```
-
-Shuning uchun `venv/` yoki `.env` fayllari **GitHub’ga push qilinmaydi**.
-
----
-
-## 👨‍💻 Muallif
 
 - GitHub: [raximov](https://github.com/raximov)  
 - Joylashuv: Buxoro  
