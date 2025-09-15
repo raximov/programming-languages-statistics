@@ -33,13 +33,22 @@ Loyiha `reportapp` ichida maxsus Django management command bilan keladi. JSON fa
 ```bash
 python manage.py importcode path/to/part1_1.json
 ```
-
-
-
 ✅ Ushbu buyruq:
 - `GithubReport` jadvalini to‘ldiradi  
 - Har bir repositoriyaning `languages` massivini **`GithubLanguage`** jadvaliga yozadi
 - Shu orqali biz normalashda performanceni yaxshilashimiz mumkin
+---
+
+## 🖥️ Serverni ishga tushirish
+
+```bash
+python manage.py runserver
+```
+
+Brauzer orqali oching:  
+👉 `http://127.0.0.1:8000/`
+
+
 
 
 
@@ -89,16 +98,7 @@ GET /api/report-orm/
 
 Bu API har bir yil bo‘yicha **eng ko‘p ishlatilgan TOP-5 dasturlash tillarini** qaytaradi.
 
----
 
-## 🖥️ Serverni ishga tushirish
-
-```bash
-python manage.py runserver
-```
-
-Brauzer orqali oching:  
-👉 `http://127.0.0.1:8000/`
 
 
 
