@@ -8,7 +8,7 @@ class ReportAPIViewORM(APIView):
     def get(self, request):
         lang_stats = (
             GithubLanguage.objects
-            .values("year", "name")
+            .values("year", "language__name")
             .annotate(total_size=Sum("size"))
             .annotate(
                 rownum=Window(

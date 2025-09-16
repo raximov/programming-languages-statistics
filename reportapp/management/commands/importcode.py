@@ -3,11 +3,11 @@ from django.db import transaction
 from django.utils.dateparse import parse_datetime
 from django.core.management.base import BaseCommand
 
-from reportapp.models import GithubReport, GithubLanguage
+from reportapp.models import GithubRepository, GithubLanguage, LanguageName
 
 
 class Command(BaseCommand):
-    help = "JSON fayldan GitHub repo va tillarni import qilish"
+    help = "JSON fayldan GitHub repo va tillarni import qilish (normalizatsiya qilingan)"
 
     def add_arguments(self, parser):
         parser.add_argument("file_path", type=str)
@@ -20,10 +20,8 @@ class Command(BaseCommand):
             data = json.load(f)
 
         report_objs = []
-        language_objs = []
-
         for item in data:
-            repo = GithubReport(
+            report_objs.append(GithubRepository(
                 owner=item.get("owner"),
                 name=item.get("name"),
                 stars=item.get("stars", 0),
@@ -49,30 +47,60 @@ class Command(BaseCommand):
                 forking_allowed=item.get("forkingAllowed", False),
                 name_with_owner=item.get("nameWithOwner"),
                 parent=item.get("parent"),
+            ))
+
+        # Repozitoriyalarni bulk_create bilan saqlash
+        GithubRepository.objects.bulk_create(report_objs, batch_size=5000, ignore_conflicts=True)
+
+        # Repozitoriyalarni map qilish
+        repo_map = {
+            r.name_with_owner: r
+            for r in GithubRepository.objects.filter(
+                name_with_owner__in=[x.name_with_owner for x in report_objs]
             )
-            report_objs.append(repo)
+        }
 
-        GithubReport.objects.bulk_create(report_objs, batch_size=5000, ignore_conflicts=True)
+        # Mavjud tillarni olish
+        existing_langs = {
+            l.name: l
+            for l in LanguageName.objects.all()
+        }
+        new_langs = []
 
-        repo_map = {r.name_with_owner: r for r in GithubReport.objects.filter(
-            name_with_owner__in=[x.name_with_owner for x in report_objs]
-        )}
+        # Yangi tillarni yig‘ish
+        for item in data:
+            for lang in item.get("languages", []):
+                if lang["name"] not in existing_langs:
+                    new_langs.append(LanguageName(name=lang["name"]))
+                    existing_langs[lang["name"]] = None  # Placeholder
 
-        # GithubLanguage ga normalash uchun bulk insert
+        # Bulk yaratish
+        LanguageName.objects.bulk_create(new_langs, ignore_conflicts=True)
+
+        # Yangi tillarni qaytadan chaqirish
+        existing_langs.update({
+            l.name: l
+            for l in LanguageName.objects.all()
+        })
+
+        # GithubLanguage bulk insert
+        language_objs = []
         for item in data:
             repo = repo_map.get(item.get("nameWithOwner"))
             if not repo:
                 continue
             year = parse_datetime(item.get("createdAt")).year
             for lang in item.get("languages", []):
-                language_objs.append(
-                    GithubLanguage(
-                        repo=repo,
-                        name=lang["name"],
-                        size=lang["size"],
-                        year=year,
+                lang_obj = existing_langs.get(lang["name"])
+                if lang_obj:
+                    language_objs.append(
+                        GithubLanguage(
+                            repo=repo,
+                            language=lang_obj,
+                            size=lang["size"],
+                            year=year,
+                        )
                     )
-                )
 
         GithubLanguage.objects.bulk_create(language_objs, batch_size=5000)
 
